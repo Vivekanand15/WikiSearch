@@ -3,9 +3,25 @@ import axios from 'axios';
 
 const Search =()=>{
     const [term,setTerm]=useState("");
+    const [results,setResults]=useState([]);
+    const resultRender=results.map((result)=>{
+        return (
+            <div key={result.pageid} className="item">
+                 <div className="right floated content">
+                    <a className="ui button" href={`https://en.wikipedia.org?curid=${result.pageid}`}>Go</a>
+                </div>
+                <div className="content">
+                    <div className="headers">
+                        {result.title}
+                    </div>
+                    <span dangerouslySetInnerHTML={{__html:result.snippet}} ></span>
+                </div>
+            </div>
+        )
+    });
     useEffect( ()=>{
         const search=async ()=>{
-            await axios.get('https://en.wikipedia.org/w/api.php',{
+            const {data}=await axios.get('https://en.wikipedia.org/w/api.php',{
                 params:{
                     action:'query',
                     list:'search',
@@ -14,8 +30,16 @@ const Search =()=>{
                     srsearch:term,
                 }
             });
+            setResults(data.query.search);
         };
-        search();
+        const timeoutid=setTimeout(() => {
+            if(term){
+                search();
+            }
+        }, 1000);
+        return () =>{
+            clearTimeout(timeoutid);
+        };
     },[term]);
     
     return(
@@ -29,6 +53,9 @@ const Search =()=>{
                      className='input'
                      />
                 </div>
+            </div>
+            <div className='ui celled list'>
+                {resultRender}
             </div>
         </div>
     );
